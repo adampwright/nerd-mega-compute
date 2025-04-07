@@ -1,19 +1,25 @@
 Metadata-Version: 2.4
 Name: nerd-mega-compute
-Version: 0.1.0
-Summary: Run compute-intensive Python functions in the cloud
+Version: 0.1.6
+Summary: Run Python functions on powerful cloud servers with a simple decorator
 Home-page: https://github.com/adampwright/nerd-mega-compute
 Author: Adam
 Author-email: your.email@example.com
+Project-URL: Bug Tracker, https://github.com/adampwright/nerd-mega-compute/issues
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
 Requires-Python: >=3.6
 Description-Content-Type: text/markdown
-Requires-Dist: requests>=2.25.0
-Requires-Dist: python-dotenv>=0.15.0
+Requires-Dist: requests
+Requires-Dist: python-dotenv
 Dynamic: author
 Dynamic: author-email
+Dynamic: classifier
 Dynamic: description
 Dynamic: description-content-type
 Dynamic: home-page
+Dynamic: project-url
 Dynamic: requires-dist
 Dynamic: requires-python
 Dynamic: summary
@@ -24,8 +30,20 @@ Run compute-intensive Python functions in the cloud with a simple decorator.
 
 ## Installation
 
+### From TestPyPI (for testing purposes)
+
+To install the package from TestPyPI, use the following command:
+
 ```bash
-pip install
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple nerd-mega-compute
+```
+
+### From PyPI (once published)
+
+Once the package is published to the main PyPI repository, you can install it with:
+
+```bash
+pip install nerd-mega-compute
 ```
 
 ## Quick Start

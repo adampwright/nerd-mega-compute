@@ -1,21 +1,24 @@
-# Import the cloud_compute decorator directly for cleaner syntax
-from nerd_mega_compute import cloud_compute, set_nerd_compute_api_key, set_debug_mode
+from nerd_mega_compute import cloud_compute, set_nerd_compute_api_key
+import time
 
-# Set the API key at the beginning of your script with a more specific function name
-set_nerd_compute_api_key("H4fBc9MlQZ5bDvYi1XZ0C2iQOTC5zNbh3t8Rjw9u")
-set_debug_mode(True)
+# Set your API key (replace with your actual Test API key)
+set_nerd_compute_api_key("<your_api_key>")
 
-
-# Add decorator to any function you want to run in the cloud
+# Define a compute-intensive function to run in the cloud
 @cloud_compute(cores=2)
-def add_numbers(a, b):
-    """A simple function that runs in the cloud"""
-    print("Starting cloud calculation...")
-    result = a + b
-    print(f"Cloud result: {result}")
-    return result
+def find_primes(limit):
+    """Find all prime numbers up to a given limit."""
+    primes = []
+    for num in range(2, limit):
+        is_prime = all(num % i != 0 for i in range(2, int(num ** 0.5) + 1))
+        if is_prime:
+            primes.append(num)
+    return primes
 
-# Call the function like normal - it runs in the cloud automatically!
-print("Running a simple test...")
-result = add_numbers(40, 2)
-print(f"The answer is {result}")
+# Run the test
+if __name__ == "__main__":
+    print("Starting a compute-intensive cloud operation...")
+    start_time = time.time()
+    result = find_primes(100000)  # Adjust the limit for a ~1-minute operation
+    end_time = time.time()
+    print(f"Found {len(result)} primes in {end_time - start_time:.2f} seconds.")

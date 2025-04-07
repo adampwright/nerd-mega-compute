@@ -15,10 +15,11 @@ class Spinner:
 
     def spin(self):
         while self.running:
-            sys.stdout.write(f"\r{next(self.spinner)} {self.message} ")
+            # Clear the line before writing the new spinner and message
+            sys.stdout.write("\r" + " " * (len(self.message) + 10) + "\r")
+            sys.stdout.write(f"{next(self.spinner)} {self.message} ")
             sys.stdout.flush()
             time.sleep(0.1)
-            sys.stdout.write("\b" * (len(self.message) + 3))
 
     def start(self):
         self.running = True
@@ -30,5 +31,7 @@ class Spinner:
         self.running = False
         if self.thread:
             self.thread.join()
-        sys.stdout.write(f"\r✅ {self.message}\n")
+        # Clear the line and write the final message with a checkmark
+        sys.stdout.write("\r" + " " * (len(self.message) + 10) + "\r")
+        sys.stdout.write(f"✅ {self.message}\n")
         sys.stdout.flush()

@@ -5,9 +5,8 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="nerd-mega-compute",
-    version="0.1.0",
-    author="Adam",
-    author_email="your.email@example.com",
+    version="0.1.7",    author="Adam P. Wright",
+    author_email="adampwright000@gmail.com",
     description="Run Python functions on powerful cloud servers with a simple decorator",
     long_description=long_description,
     long_description_content_type="text/markdown",
