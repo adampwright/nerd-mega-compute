@@ -68,3 +68,7 @@ __pycache__/
 
 *.gz
 *.egg-info
+
+.env
+**/.env
+*.env
