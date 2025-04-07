@@ -1,8 +1,10 @@
 # Import the cloud_compute decorator directly for cleaner syntax
-from nerd_mega_compute import cloud_compute, set_nerd_compute_api_key
+from nerd_mega_compute import cloud_compute, set_nerd_compute_api_key, set_debug_mode
 
 # Set the API key at the beginning of your script with a more specific function name
 set_nerd_compute_api_key("H4fBc9MlQZ5bDvYi1XZ0C2iQOTC5zNbh3t8Rjw9u")
+set_debug_mode(True)
+
 
 # Add decorator to any function you want to run in the cloud
 @cloud_compute(cores=2)
