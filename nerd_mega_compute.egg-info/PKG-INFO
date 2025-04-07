@@ -2,7 +2,7 @@ Metadata-Version: 2.4
 Name: nerd-mega-compute
 Version: 0.1.0
 Summary: Run compute-intensive Python functions in the cloud
-Home-page: https://github.com/yourusername/nerd-mega-compute
+Home-page: https://github.com/adampwright/nerd-mega-compute
 Author: Adam
 Author-email: your.email@example.com
 Requires-Python: >=3.6

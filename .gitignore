@@ -1,59 +1,70 @@
-# Compiled source #
-###################
-*.class
-*.dll
-*.exe
-*.o
-*.so
+# Python distribution / packaging #
+###################################
+*.egg-info/
+*.eggs/
+*.whl
+pip-wheel-metadata/
+share/python-wheels/
 
-# Packages #
-############
-*.7z
-*.dmg
-*.gz
-*.iso
-*.jar
-*.rar
-*.tar
-*.zip
+# Testing #
+###########
+.tox/
+.nox/
+.coverage
+*.cover
+coverage.xml
+*.pytest_cache/
+htmlcov/
 
-# Logs and databases #
-#######################
-*.log
-*.sql
-*.sqlite
+# Sphinx documentation #
+########################
+docs/_build/
+*.rst~
 
-# OS generated files #
-######################
-.DS_Store
-Thumbs.db
+# Jupyter Notebook #
+####################
+.ipynb_checkpoints/
 
-# Python #
+# PyInstaller #
+###############
+*.manifest
+*.spec
+
+# Celery #
 ##########
+celerybeat-schedule
+celerybeat.pid
+
+# mypy #
+########
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre #
+########
+.pyre/
+
+# C extensions #
+################
+*.c
+*.cpp
+*.h
+*.so
+*.pyd
+
+# Virtual Environments #
+########################
+venv/
 __pycache__/
 *.py[cod]
+__pycache__/
 *.pyo
 *.pyd
+*.pdb
 *.egg
 *.egg-info/
-dist/
-build/
-*.env
-*.venv
+*.whl
 
-# Node.js #
-###########
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# IDEs and editors #
-####################
-.vscode/
-.idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+*.gz
+*.egg-info

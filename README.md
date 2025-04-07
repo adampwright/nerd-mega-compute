@@ -4,8 +4,20 @@ Run compute-intensive Python functions in the cloud with a simple decorator.
 
 ## Installation
 
+### From TestPyPI (for testing purposes)
+
+To install the package from TestPyPI, use the following command:
+
 ```bash
-pip install
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple nerd-mega-compute
+```
+
+### From PyPI (once published)
+
+Once the package is published to the main PyPI repository, you can install it with:
+
+```bash
+pip install nerd-mega-compute
 ```
 
 ## Quick Start

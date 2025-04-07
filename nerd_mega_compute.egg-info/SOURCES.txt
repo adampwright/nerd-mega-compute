@@ -1,8 +1,12 @@
 README.md
 setup.py
 nerd_mega_compute/__init__.py
-nerd_mega_compute/core.py
+nerd_mega_compute/cloud.py
+nerd_mega_compute/config.py
 nerd_mega_compute/example.py
+nerd_mega_compute/spinner.py
+nerd_mega_compute/test_api.py
+nerd_mega_compute/utils.py
 nerd_mega_compute.egg-info/PKG-INFO
 nerd_mega_compute.egg-info/SOURCES.txt
 nerd_mega_compute.egg-info/dependency_links.txt
