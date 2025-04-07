@@ -1,0 +1,10 @@
+README.md
+setup.py
+nerd_mega_compute/__init__.py
+nerd_mega_compute/core.py
+nerd_mega_compute/example.py
+nerd_mega_compute.egg-info/PKG-INFO
+nerd_mega_compute.egg-info/SOURCES.txt
+nerd_mega_compute.egg-info/dependency_links.txt
+nerd_mega_compute.egg-info/requires.txt
+nerd_mega_compute.egg-info/top_level.txt
