@@ -80,6 +80,7 @@ def cloud_compute(cores=8, timeout=1800):
                     serialized_kwargs[key] = {'type': 'string', 'value': str(value)}
                     spinner.start()
 
+
             # Add debugging code to make sure the results can be found
             cloud_code = """
 import pickle
@@ -240,18 +241,49 @@ except Exception as e:
                         except Exception:
                             debug_print("Could not display response text")
 
+# Replace the response handling section with improved error detection:
                     # If we get a non-200 status code
                     if result_response.status_code != 200:
                         if result_response.status_code == 202:
-                            # Status 202 means "Accepted" - the job is still starting
+                            # Status 202 means "Accepted" - the job is still processing
                             try:
                                 status_data = result_response.json()
                                 status_message = status_data.get('status', 'Unknown status')
-                                spinner.update_message(f"Job status: {status_message} (elapsed: {int(elapsed)}s)")
+                                # Truncate long status messages
+                                if len(status_message) > 50:
+                                    status_message = status_message[:47] + "..."
+                                spinner.update_message(f"Job: {status_message} ({int(elapsed)}s)")
                             except Exception:
-                                spinner.update_message(f"Job is starting up... (elapsed: {int(elapsed)}s)")
+                                spinner.update_message(f"Job processing... ({int(elapsed)}s)")
+
+                            # Check for timeout to prevent hanging
+                            if elapsed > timeout:
+                                spinner.stop()
+                                print(f"\n❌ Job timed out after {int(elapsed)} seconds")
+                                return None
+
                             time.sleep(2)
                             continue
+                        elif result_response.status_code == 500:
+                            # Job failed - extract error message and return
+                            try:
+                                error_data = result_response.json()
+                                return process_error_response(error_data, spinner, elapsed)
+                            except Exception as e:
+                                debug_print(f"Error parsing failure response: {e}")
+                                spinner.stop()
+                                print(f"\n❌ Request failed with status {result_response.status_code}")
+                                return None
+
+                        # Unexpected status code
+                        if check_count >= 30:  # After ~60 seconds of trying
+                            spinner.stop()
+                            print(f"\n❌ Job failed with unexpected status code: {result_response.status_code}")
+                            try:
+                                print(f"Response: {result_response.text[:500]}")
+                            except:
+                                pass
+                            return None
 
                         if check_count % 10 == 0:
                             debug_print(f"Unexpected status code: {result_response.status_code}")
@@ -262,67 +294,68 @@ except Exception as e:
                     try:
                         result_data = result_response.json()
 
+                        # Check for error field first
+                        if "error" in result_data or "status" in result_data and result_data.get("status") == "FAILED":
+                            return process_error_response(result_data, spinner, elapsed)
+
                         # If the response contains result data
                         if "result" in result_data:
                             output_text = result_data["result"]
 
-                            # Look for our result marker
+                            # Try direct JSON parsing first
+                            try:
+                                # Is the result itself valid JSON?
+                                direct_json = json.loads(output_text)
+                                spinner.update_message(f"Cloud computation completed in {int(elapsed)}s")
+                                spinner.stop()
+                                return direct_json
+                            except json.JSONDecodeError:
+                                # Not direct JSON, continue with marker processing
+                                debug_print("Output is not direct JSON, looking for markers")
+
+                            # Look for result markers
                             if "RESULT_MARKER_BEGIN" in output_text and "RESULT_MARKER_END" in output_text:
-                                start_marker = output_text.index("RESULT_MARKER_BEGIN") + len("RESULT_MARKER_BEGIN")
-                                end_marker = output_text.index("RESULT_MARKER_END")
-                                result_json_str = output_text[start_marker:end_marker].strip()
-
                                 try:
-                                    # Parse the result JSON
+                                    start_marker = output_text.index("RESULT_MARKER_BEGIN") + len("RESULT_MARKER_BEGIN")
+                                    end_marker = output_text.index("RESULT_MARKER_END")
+                                    result_json_str = output_text[start_marker:end_marker].strip()
+
+                                    # Parse the result JSON between markers
                                     result_json = json.loads(result_json_str)
-                                    if "result" in result_json:
-                                        result_encoded = result_json["result"]
 
-                                        # Update spinner message while deserializing
-                                        spinner.update_message(f"Retrieving results from cloud ({int(elapsed)}s)...")
+                                    # Check for error information in the result
+                                    if "error" in result_json:
+                                        return process_error_response(result_json, spinner, elapsed)
 
-                                        # Deserialize the result
-                                        result_binary = base64.b64decode(result_encoded)
-                                        result_decompressed = zlib.decompress(result_binary)
-                                        result = pickle.loads(result_decompressed)
-
-                                        # Stop spinner and show completion message
-                                        spinner.update_message(f"Cloud computation completed in {int(elapsed)}s")
-                                        spinner.stop()
-                                        return result
-                                except json.JSONDecodeError:
-                                    debug_print(f"Invalid JSON: {result_json_str[:100]}...")
+                                    # Success - return the parsed JSON directly
+                                    spinner.update_message(f"Cloud computation completed in {int(elapsed)}s")
+                                    spinner.stop()
+                                    return result_json
                                 except Exception as e:
-                                    debug_print(f"Error processing result: {e}")
+                                    debug_print(f"Error processing markers: {e}")
 
-                            # Fallback method: look for any JSON with our result pattern
+                            # Fallback - search for JSON in the output line by line
                             for line in output_text.split('\n'):
-                                if line.startswith("{") and "result" in line and "result_size" in line:
+                                if line.strip().startswith("{") and line.strip().endswith("}"):
                                     try:
-                                        debug_print(f"Found potential result line: {line[:50]}...")
-                                        result_json = json.loads(line)
-                                        if "result" in result_json and "result_size" in result_json:
-                                            result_encoded = result_json["result"]
-
-                                            # Update spinner message while deserializing
-                                            spinner.update_message(f"Retrieving results from cloud ({int(elapsed)}s)...")
-
-                                            # Deserialize the result
-                                            result_binary = base64.b64decode(result_encoded)
-                                            result_decompressed = zlib.decompress(result_binary)
-                                            result = pickle.loads(result_decompressed)
-
-                                            # Stop spinner and show completion message
+                                        line_json = json.loads(line)
+                                        if isinstance(line_json, dict) and not "error" in line_json:
                                             spinner.update_message(f"Cloud computation completed in {int(elapsed)}s")
                                             spinner.stop()
-                                            return result
-                                    except Exception as e:
-                                        debug_print(f"Error processing line as result: {e}")
+                                            return line_json
+                                    except:
+                                        pass
 
                     except Exception as e:
-                        debug_print(f"Error checking job status: {e}")
+                        debug_print(f"Error processing response: {e}")
                         if DEBUG_MODE:
                             traceback.print_exc()
+
+                    # Safety timeout check
+                    if elapsed > timeout - 30:
+                        spinner.stop()
+                        print(f"\n❌ Job timed out after {int(elapsed)} seconds")
+                        return None
 
                 except Exception as e:
                     # Add this exception handler for the outer try block
@@ -335,3 +368,34 @@ except Exception as e:
 
         return wrapper
     return decorator
+
+def process_error_response(response_data, spinner, elapsed_time):
+    """Process an error response and display meaningful messages to the user."""
+    spinner.stop()
+
+    error_msg = "Unknown error occurred"
+    details = ""
+
+    # Try to extract error message from response
+    try:
+        if isinstance(response_data, dict):
+            error_msg = response_data.get('error', error_msg)
+            details = response_data.get('details', '')
+
+            # Handle case where error is in 'body' (API Gateway format)
+            if 'body' in response_data and isinstance(response_data['body'], str):
+                try:
+                    body_data = json.loads(response_data['body'])
+                    if isinstance(body_data, dict):
+                        error_msg = body_data.get('error', error_msg)
+                        details = body_data.get('details', details)
+                except:
+                    pass
+    except:
+        pass
+
+    print(f"\n❌ Cloud job failed after {int(elapsed_time)}s: {error_msg}")
+    if details:
+        print(f"Error details:\n{details}")
+
+    return None  # Return None to indicate failure

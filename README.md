@@ -14,7 +14,7 @@ pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://
 
 ### From PyPI
 
-When published, install via:
+Install via:
 
 ```bash
 pip install nerd-mega-compute
@@ -127,6 +127,16 @@ This ensures compatibility and security in the cloud. Unsupported libraries may 
        result = pool.map(process_item, data)
     return result
   ```
+
+### Supported Core Configurations
+
+This library currently supports AWS Batch with Fargate compute environments. The number of cores must be one of the following values:
+
+- 1 core
+- 2 cores
+- 4 cores
+- 8 cores
+- 16 cores
 
 ### Tips
 

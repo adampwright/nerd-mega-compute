@@ -9,15 +9,25 @@ class Spinner:
         self.message = message
         self.running = False
         self.thread = None
+        self.last_message_length = 0
 
     def update_message(self, message):
-        self.message = message
+        # Truncate long messages to prevent UI issues
+        max_length = 50  # Keep messages reasonably short
+        if len(message) > max_length:
+            self.message = message[:max_length-3] + "..."
+        else:
+            self.message = message
+        # Track the longest message for proper clearing
+        self.last_message_length = max(self.last_message_length, len(self.message) + 2)
 
     def spin(self):
         while self.running:
-            # Clear the line before writing the new spinner and message
-            sys.stdout.write("\r" + " " * (len(self.message) + 10) + "\r")
-            sys.stdout.write(f"{next(self.spinner)} {self.message} ")
+            spinner_char = next(self.spinner)
+            # Clear the current line content
+            sys.stdout.write('\r')
+            # Write the new spinner and message (no newlines)
+            sys.stdout.write(f'{spinner_char} {self.message}')
             sys.stdout.flush()
             time.sleep(0.1)
 
@@ -31,7 +41,8 @@ class Spinner:
         self.running = False
         if self.thread:
             self.thread.join()
-        # Clear the line and write the final message with a checkmark
-        sys.stdout.write("\r" + " " * (len(self.message) + 10) + "\r")
-        sys.stdout.write(f"✅ {self.message}\n")
+        # Clear the current line
+        sys.stdout.write('\r')
+        # Write final message with a checkmark (and newline)
+        sys.stdout.write(f'✅ {self.message}\n')
         sys.stdout.flush()
