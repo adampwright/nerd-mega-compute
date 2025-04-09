@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: nerd-mega-compute
-Version: 0.1.8
+Version: 0.1.9
 Summary: Run Python functions on powerful cloud servers with a simple decorator
 Home-page: https://github.com/adampwright/nerd-mega-compute
 Author: Adam P. Wright
@@ -40,7 +40,7 @@ pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://
 
 ### From PyPI
 
-When published, install via:
+Install via:
 
 ```bash
 pip install nerd-mega-compute
@@ -153,6 +153,16 @@ This ensures compatibility and security in the cloud. Unsupported libraries may 
        result = pool.map(process_item, data)
     return result
   ```
+
+### Supported Core Configurations
+
+This library currently supports AWS Batch with Fargate compute environments. The number of cores must be one of the following values:
+
+- 1 core
+- 2 cores
+- 4 cores
+- 8 cores
+- 16 cores
 
 ### Tips
 

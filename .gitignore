@@ -74,3 +74,6 @@ __pycache__/
 *.env
 
 */fresh_venv
+/fresh_venv
+*/venv
+/venv
