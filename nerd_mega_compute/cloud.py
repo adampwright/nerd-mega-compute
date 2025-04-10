@@ -1,17 +1,41 @@
+import os
+import requests
 import functools
 import inspect
+import json
 import pickle
 import base64
 import zlib
 import uuid
 import time
-import json
-import requests
 import traceback
 import sys
-from .config import API_KEY, NERD_COMPUTE_ENDPOINT, DEBUG_MODE
+from dotenv import load_dotenv
+from .config import NERD_COMPUTE_ENDPOINT, DEBUG_MODE
 from .spinner import Spinner
 from .utils import debug_print, check_job_manually
+
+def set_nerd_compute_api_key(api_key):
+    """Set the API key for nerd-mega-compute."""
+    from .config import set_nerd_compute_api_key as config_set_key
+    config_set_key(api_key)
+
+def get_api_key():
+    """Get the API key from environment or global variable."""
+    from .config import API_KEY
+
+    # First check if it's already set in the config
+    if API_KEY:
+        return API_KEY
+
+    # Then try to load from .env file
+    load_dotenv()
+    env_api_key = os.getenv("API_KEY")
+    if env_api_key:
+        set_nerd_compute_api_key(env_api_key)
+        return env_api_key
+
+    return None
 
 def cloud_compute(cores=8, timeout=1800):
     """
@@ -28,7 +52,8 @@ def cloud_compute(cores=8, timeout=1800):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             # Check if API_KEY is set before proceeding
-            if not API_KEY:
+            api_key = get_api_key()
+            if not api_key:
                 raise ValueError(
                     "API_KEY is not set. Please set it using:\n"
                     "1. Create a .env file with API_KEY=your_key_here\n"
@@ -168,7 +193,7 @@ except Exception as e:
             # Step 3: Send our package to the cloud service
             headers = {
                 "Content-Type": "application/json",
-                "x-api-key": API_KEY
+                "x-api-key": api_key  # Changed from "Authorization: Bearer" to "x-api-key"
             }
 
             try:
@@ -228,7 +253,7 @@ except Exception as e:
                     # Check job status
                     result_response = requests.get(
                         NERD_COMPUTE_ENDPOINT,
-                        headers=headers,
+                        headers=headers,  # Using the same headers with x-api-key
                         params={"jobId": job_id, "debug": "true"},
                         timeout=10
                     )

@@ -4,8 +4,8 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-# Configuration for the cloud service
-API_KEY = os.getenv("API_KEY")
+# API configuration
+API_KEY = None
 NERD_COMPUTE_ENDPOINT = "https://lbmoem9mdg.execute-api.us-west-1.amazonaws.com/prod/nerd-mega-compute"
 DEBUG_MODE = False
 

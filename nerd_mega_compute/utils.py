@@ -1,14 +1,23 @@
+import os
+import json
 import requests
-import traceback
-from .config import API_KEY, NERD_COMPUTE_ENDPOINT, DEBUG_MODE
+from .config import DEBUG_MODE, NERD_COMPUTE_ENDPOINT
+
+def enable_debug_mode():
+    """Enable debug mode for more verbose output."""
+    from .config import set_debug_mode
+    set_debug_mode(True)
+    print("Debug mode enabled.")
 
 def debug_print(msg):
     """Print debug messages only if DEBUG_MODE is True"""
+    from .config import DEBUG_MODE
     if DEBUG_MODE:
         print(f"🔍 DEBUG: {msg}")
 
 def check_job_manually(job_id):
     """Manual check of job status for debugging"""
+    from .config import API_KEY
     try:
         headers = {"x-api-key": API_KEY}
         response = requests.get(

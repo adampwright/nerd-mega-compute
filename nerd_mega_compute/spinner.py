@@ -1,48 +1,45 @@
-import itertools
 import sys
 import threading
 import time
+import itertools
 
 class Spinner:
-    def __init__(self, message=""):
-        self.spinner = itertools.cycle(['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'])
+    """
+    A simple spinner to indicate a process is running.
+    """
+    def __init__(self, message="Processing..."):
         self.message = message
         self.running = False
-        self.thread = None
-        self.last_message_length = 0
-
-    def update_message(self, message):
-        # Truncate long messages to prevent UI issues
-        max_length = 50  # Keep messages reasonably short
-        if len(message) > max_length:
-            self.message = message[:max_length-3] + "..."
-        else:
-            self.message = message
-        # Track the longest message for proper clearing
-        self.last_message_length = max(self.last_message_length, len(self.message) + 2)
+        self.spinner_thread = None
+        self.spinner = itertools.cycle(['⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷'])
 
     def spin(self):
+        """Run the spinning animation."""
         while self.running:
-            spinner_char = next(self.spinner)
-            # Clear the current line content
-            sys.stdout.write('\r')
-            # Write the new spinner and message (no newlines)
-            sys.stdout.write(f'{spinner_char} {self.message}')
+            sys.stdout.write(f"\r{next(self.spinner)} {self.message}")
             sys.stdout.flush()
             time.sleep(0.1)
+            sys.stdout.write('\b')
 
     def start(self):
+        """Start the spinner animation in a separate thread."""
         self.running = True
-        self.thread = threading.Thread(target=self.spin)
-        self.thread.daemon = True
-        self.thread.start()
+        self.spinner_thread = threading.Thread(target=self.spin)
+        self.spinner_thread.daemon = True
+        self.spinner_thread.start()
 
     def stop(self):
+        """Stop the spinner animation."""
         self.running = False
-        if self.thread:
-            self.thread.join()
-        # Clear the current line
-        sys.stdout.write('\r')
-        # Write final message with a checkmark (and newline)
-        sys.stdout.write(f'✅ {self.message}\n')
+        if self.spinner_thread and self.spinner_thread.is_alive():
+            self.spinner_thread.join(0.1)
+        # Clear the spinner line
+        sys.stdout.write(f"\r{' ' * (len(self.message) + 2)}\r")
         sys.stdout.flush()
+
+    def update_message(self, message):
+        """Update the spinner message."""
+        # Clear the current line
+        sys.stdout.write(f"\r{' ' * (len(self.message) + 2)}\r")
+        sys.stdout.flush()
+        self.message = message
