@@ -266,7 +266,6 @@ except Exception as e:
                         except Exception:
                             debug_print("Could not display response text")
 
-# Replace the response handling section with improved error detection:
                     # If we get a non-200 status code
                     if result_response.status_code != 200:
                         if result_response.status_code == 202:
@@ -318,6 +317,17 @@ except Exception as e:
                     # Try to parse the JSON response
                     try:
                         result_data = result_response.json()
+                        debug_print(f"Result data: {json.dumps(result_data)[:200]}...")
+
+                        # Check if the response is wrapped in a JSON body field (API Gateway format)
+                        if "body" in result_data and isinstance(result_data["body"], str):
+                            try:
+                                body_data = json.loads(result_data["body"])
+                                if isinstance(body_data, dict):
+                                    result_data = body_data
+                                    debug_print("Extracted result from body field")
+                            except Exception as e:
+                                debug_print(f"Error parsing body JSON: {e}")
 
                         # Check for error field first
                         if "error" in result_data or "status" in result_data and result_data.get("status") == "FAILED":
@@ -326,6 +336,7 @@ except Exception as e:
                         # If the response contains result data
                         if "result" in result_data:
                             output_text = result_data["result"]
+                            debug_print(f"Raw result: {output_text[:200]}")
 
                             # Try direct JSON parsing first
                             try:
@@ -333,6 +344,7 @@ except Exception as e:
                                 direct_json = json.loads(output_text)
                                 spinner.update_message(f"Cloud computation completed in {int(elapsed)}s")
                                 spinner.stop()
+                                print(f"✅ {func.__name__} completed in {int(elapsed)}s")
                                 return direct_json
                             except json.JSONDecodeError:
                                 # Not direct JSON, continue with marker processing
@@ -344,18 +356,50 @@ except Exception as e:
                                     start_marker = output_text.index("RESULT_MARKER_BEGIN") + len("RESULT_MARKER_BEGIN")
                                     end_marker = output_text.index("RESULT_MARKER_END")
                                     result_json_str = output_text[start_marker:end_marker].strip()
+                                    debug_print(f"Extracted from markers: {result_json_str}")
 
-                                    # Parse the result JSON between markers
-                                    result_json = json.loads(result_json_str)
+                                    # Try to parse the result as JSON between markers
+                                    try:
+                                        result_json = json.loads(result_json_str)
 
-                                    # Check for error information in the result
-                                    if "error" in result_json:
-                                        return process_error_response(result_json, spinner, elapsed)
+                                        # Check for error information in the result
+                                        if "error" in result_json:
+                                            return process_error_response(result_json, spinner, elapsed)
 
-                                    # Success - return the parsed JSON directly
-                                    spinner.update_message(f"Cloud computation completed in {int(elapsed)}s")
-                                    spinner.stop()
-                                    return result_json
+                                        # If we have a result field with serialized data, decode it
+                                        if "result" in result_json and "result_size" in result_json:
+                                            try:
+                                                encoded_result = result_json["result"]
+                                                decoded_result = pickle.loads(zlib.decompress(base64.b64decode(encoded_result)))
+                                                spinner.update_message(f"Cloud computation completed in {int(elapsed)}s")
+                                                spinner.stop()
+                                                print(f"✅ {func.__name__} completed in {int(elapsed)}s")
+                                                return decoded_result
+                                            except Exception as e:
+                                                debug_print(f"Error decoding result: {e}")
+
+                                        # If the result JSON doesn't have the expected structure, return it directly
+                                        spinner.update_message(f"Cloud computation completed in {int(elapsed)}s")
+                                        spinner.stop()
+                                        print(f"✅ {func.__name__} completed in {int(elapsed)}s")
+                                        return result_json
+                                    except json.JSONDecodeError:
+                                        # The data between markers might be a plain result, not JSON
+                                        debug_print("Result between markers is not JSON")
+                                        # Try to interpret the raw result (could be a number, string, etc.)
+                                        try:
+                                            # If it's a number
+                                            result_value = eval(result_json_str)
+                                            spinner.update_message(f"Cloud computation completed in {int(elapsed)}s")
+                                            spinner.stop()
+                                            print(f"✅ {func.__name__} completed in {int(elapsed)}s")
+                                            return result_value
+                                        except:
+                                            # If all else fails, return the raw string between markers
+                                            spinner.update_message(f"Cloud computation completed in {int(elapsed)}s")
+                                            spinner.stop()
+                                            print(f"✅ {func.__name__} completed in {int(elapsed)}s")
+                                            return result_json_str
                                 except Exception as e:
                                     debug_print(f"Error processing markers: {e}")
 
@@ -364,12 +408,20 @@ except Exception as e:
                                 if line.strip().startswith("{") and line.strip().endswith("}"):
                                     try:
                                         line_json = json.loads(line)
-                                        if isinstance(line_json, dict) and not "error" in line_json:
+                                        if isinstance(line_json, dict) and "error" not in line_json:
                                             spinner.update_message(f"Cloud computation completed in {int(elapsed)}s")
                                             spinner.stop()
+                                            print(f"✅ {func.__name__} completed in {int(elapsed)}s")
                                             return line_json
                                     except:
                                         pass
+
+                            # If we've processed the output but couldn't parse it as expected,
+                            # return the raw output as a last resort
+                            spinner.update_message(f"Cloud computation completed in {int(elapsed)}s")
+                            spinner.stop()
+                            print(f"✅ {func.__name__} completed with raw results in {int(elapsed)}s")
+                            return output_text
 
                     except Exception as e:
                         debug_print(f"Error processing response: {e}")

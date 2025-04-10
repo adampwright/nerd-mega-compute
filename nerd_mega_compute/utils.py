@@ -15,6 +15,19 @@ def debug_print(msg):
     if DEBUG_MODE:
         print(f"🔍 DEBUG: {msg}")
 
+def extract_result_between_markers(result_string, begin_marker="RESULT_MARKER_BEGIN", end_marker="RESULT_MARKER_END"):
+    """Extract the result between begin and end markers."""
+    try:
+        if begin_marker in result_string and end_marker in result_string:
+            start = result_string.find(begin_marker) + len(begin_marker) + 1  # +1 for newline
+            end = result_string.find(end_marker)
+            if start > 0 and end > start:
+                return result_string[start:end].strip()
+        return None
+    except Exception as e:
+        debug_print(f"Error extracting result between markers: {e}")
+        return None
+
 def check_job_manually(job_id):
     """Manual check of job status for debugging"""
     from .config import API_KEY
@@ -35,8 +48,27 @@ def check_job_manually(job_id):
             data = response.json()
             if "result" in data:
                 print(f"Result found! Length: {len(data['result'])}")
+
+                # Try to extract result between markers
+                extracted = extract_result_between_markers(data['result'])
+                if extracted:
+                    print(f"Extracted result: {extracted}")
+                else:
+                    print("Could not extract result between markers")
             else:
                 print(f"No result field found. Keys: {list(data.keys())}")
+
+            # Check if 'body' might contain the result (handling nested JSON)
+            if "body" in data and isinstance(data["body"], str):
+                try:
+                    body_data = json.loads(data["body"])
+                    if "result" in body_data:
+                        print(f"Result found in body! Length: {len(body_data['result'])}")
+                        extracted = extract_result_between_markers(body_data['result'])
+                        if extracted:
+                            print(f"Extracted result from body: {extracted}")
+                except:
+                    print("Body is not valid JSON")
         except:
             print("Response is not valid JSON")
 
