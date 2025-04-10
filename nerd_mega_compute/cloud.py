@@ -417,11 +417,35 @@ except Exception as e:
                                         pass
 
                             # If we've processed the output but couldn't parse it as expected,
-                            # return the raw output as a last resort
+                            # Clean the output and return it as a last resort
+                            clean_output = output_text
+                            # Remove RESULT_MARKER lines if present
+                            if "RESULT_MARKER_BEGIN" in clean_output and "RESULT_MARKER_END" in clean_output:
+                                try:
+                                    start_marker = clean_output.index("RESULT_MARKER_BEGIN")
+                                    end_marker = clean_output.index("RESULT_MARKER_END") + len("RESULT_MARKER_END")
+                                    # Extract what's between the markers only
+                                    marker_content = clean_output[start_marker + len("RESULT_MARKER_BEGIN"):clean_output.index("RESULT_MARKER_END")].strip()
+                                    # Try to evaluate if it's a simple value
+                                    try:
+                                        result_value = eval(marker_content)
+                                        spinner.update_message(f"Cloud computation completed in {int(elapsed)}s")
+                                        spinner.stop()
+                                        print(f"✅ {func.__name__} completed in {int(elapsed)}s")
+                                        return result_value
+                                    except:
+                                        # Otherwise just return the content between markers
+                                        spinner.update_message(f"Cloud computation completed in {int(elapsed)}s")
+                                        spinner.stop()
+                                        print(f"✅ {func.__name__} completed in {int(elapsed)}s")
+                                        return marker_content
+                                except Exception as e:
+                                    debug_print(f"Error cleaning markers: {e}")
+
                             spinner.update_message(f"Cloud computation completed in {int(elapsed)}s")
                             spinner.stop()
-                            print(f"✅ {func.__name__} completed with raw results in {int(elapsed)}s")
-                            return output_text
+                            print(f"✅ {func.__name__} completed in {int(elapsed)}s")
+                            return clean_output
 
                     except Exception as e:
                         debug_print(f"Error processing response: {e}")
