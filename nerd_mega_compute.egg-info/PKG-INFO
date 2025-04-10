@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: nerd-mega-compute
-Version: 0.1.9
+Version: 0.1.10
 Summary: Run Python functions on powerful cloud servers with a simple decorator
 Home-page: https://github.com/adampwright/nerd-mega-compute
 Author: Adam P. Wright
